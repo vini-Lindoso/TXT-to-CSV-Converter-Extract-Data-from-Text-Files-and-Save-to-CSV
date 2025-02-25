@@ -5,6 +5,8 @@ caminho_base = input('Cole o caminho da pasta: ') # Caminho da pasta onde estão
 
 caminho_saida = input('Cole o caminho da pasta onde o arquivo .CSV será salvo: ')
 
+nome_do_txt = input('Digite o nome do arquivo .txt: ')
+
 # Verifica se a pasta de saída existe; se não, cria a pasta
 if not os.path.exists(caminho_saida):
     print(f'A pasta de saída "{caminho_saida}" não existe. Criando...')
@@ -28,7 +30,7 @@ for numero_cliente in lista_clientes_desejados: # Para cada cliente na lista de 
         
         print(f'Pasta do cliente: {caminho_pasta_cliente}') # Exibe o caminho da pasta do cliente
        	
-        caminho_arquivo_txt = os.path.join(caminho_pasta_cliente, 'Acesso e Senhas.txt') # Cria o caminho completo do arquivo .txt
+        caminho_arquivo_txt = os.path.join(caminho_pasta_cliente, nome_do_txt + '.txt') # Cria o caminho completo do arquivo .txt
         
         
         if os.path.isfile(caminho_arquivo_txt):
@@ -42,24 +44,30 @@ for numero_cliente in lista_clientes_desejados: # Para cada cliente na lista de 
                 else:          
                     acesso = None
                     senha = None
+                    senha_nova = None
                     cnpj = None
                     login = None
                 
                     for linha in linhas:
-                        if 'Acesso:' in linha or "acesso:" in linha:  # Verifica se a linha contém 'Acesso:' ou 'acesso:'
+                        linha_lower = linha.lower()
+                        
+                        if any(palavra in linha_lower for palavra in ['acessos:', "acesso:" ]):  # Verifica se a linha contém 'Acesso:' ou 'acesso:'
                             acesso = linha.split(':')[1].strip()  # Pega o valor após o ':' e salva em acesso
-                        elif any(palavra in linha for palavra in ['Senha:', 'senha:', 'senhas', 'Senhas', 'SENHAS', 'SENHA']): # Verifica se a linha contém 'Senha:' ou 'senha:'
-                            senha = linha.split(':')[1].strip()
-                        elif 'CNPJ:' in linha or "cnpj:" in linha:  # Verifica se a linha contém 'CNPJ:' ou 'cnpj:'
+                        elif any(palavra in linha_lower for palavra in ['senha:', 'senhas:']): # Verifica se a linha contém 'Senha:' ou 'senha:'
+                            senha = linha.split(':')[1].strip()    
+                        elif any(palavra in linha_lower for palavra in ['novo', 'nova', 'novas', 'novos']): # Verifica se a linha contém 'Senha:' ou 'senha:'
+                            senha_nova = linha.split(':')[1].strip()
+                        elif 'cnpj' in linha_lower:  # Verifica se a linha contém 'CNPJ:' ou 'cnpj:'
                             cnpj = linha.split(':')[1].strip()
-                        elif 'Login:' in linha or "login:" in linha:  # Verifica se a linha contém 'Login:' ou 'login:'
+                        elif any(palavra in linha_lower for palavra in['login', 'logins']): # Verifica se a linha contém 'Login:' ou 'login:'
                             login = linha.split(':')[1].strip()
 
                 if senha or acesso or cnpj or login:
-                    dados_clientes.append([numero_cliente, acesso, senha, cnpj, login]) 
+                    dados_clientes.append([numero_cliente, acesso, senha, senha_nova, cnpj, login]) 
                     print(f'Dados do cliente {numero_cliente} salvos:')
                     print(f'  Acesso: {acesso}')
                     print(f'  Senha: {senha}')
+                    print(f'  Nova senha: {senha_nova}')
                     print(f'  CNPJ: {cnpj}')
                     print(f'  Login: {login}')
                     print('-' * 30)  # Linha separadora para melhor visualização # Exibe os dados do cliente
@@ -67,16 +75,19 @@ for numero_cliente in lista_clientes_desejados: # Para cada cliente na lista de 
         else:
             print(f'Arquivo {numero_cliente} não encontrado') 
             # Exibe mensagem de erro caso o arquivo não seja encontrado
+            print('-' * 30)  # Linha separadora para melhor visualização # Exibe os dados do cliente
                
     except FileNotFoundError:
         print(f'Pasta do cliente {numero_cliente} não encontrado')
         # Exibe mensagem de erro caso a pasta do cliente não seja encontrada
+        print('-' * 30)  # Linha separadora para melhor visualização # Exibe os dados do cliente
         
     except Exception as e:
         print(f'Erro inesperado ao acessar a pasta do cliente {numero_cliente}: {e}')
         # Exibe mensagem de erro caso ocorra um erro inesperado ao acessar a pasta do cliente
+        print('-' * 30)  # Linha separadora para melhor visualização # Exibe os dados do cliente
         
-df = pd.DataFrame(dados_clientes, columns=['Cliente', 'Acesso', 'Senha', 'CNPJ', 'Login'])
+df = pd.DataFrame(dados_clientes, columns=['Cliente', 'Acesso', 'Senha', 'Nova Senha','CNPJ', 'Login'])
 # Salva o DataFrame em um arquivo Excel
 
 caminho_arquivo_csv = os.path.join(caminho_saida, 'dados_clientes.csv')
@@ -84,3 +95,5 @@ caminho_arquivo_csv = os.path.join(caminho_saida, 'dados_clientes.csv')
 df.to_csv(caminho_arquivo_csv, index=False)
 
 print(f'\nPlanilha criada com sucesso em {caminho_arquivo_csv}')  # Exibe mensagem de sucesso
+
+finalizar_programa = input('Digite qualquer coisa para fechar o programa:')
